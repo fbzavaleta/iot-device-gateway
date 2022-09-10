@@ -47,10 +47,10 @@ QueueHandle_t XQuee_ultrasonic;
 
 typedef struct {
 	uint16_t command;
-	uint32_t distance;
+	uint32_t distance_cm;
+	uint32_t distance_m;
 	TaskHandle_t taskHandle;
 } CMD_t;
-
 
 
 void ultrasonic()
@@ -86,7 +86,9 @@ void ultrasonic()
 			}
 		} else {
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
-			cmdBuf.distance = distance;
+			// 1m = 100cm
+			cmdBuf.distance_cm = distance;
+			cmdBuf.distance_m = distance / 100.0;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -103,7 +105,7 @@ void collision()
 			xQueueReceive( XQuee_ultrasonic, &cmdBuf, portMAX_DELAY ); 	
 
 			strcpy((char*)ascii, "Ultrasonic DISTANCE");
-			sprintf((char*)ascii, "%d cm",cmdBuf.distance );
+			sprintf((char*)ascii, "%d cm",cmdBuf.distance_cm );
 			
 			
 			if( DEGUG ) 
