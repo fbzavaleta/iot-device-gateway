@@ -58,8 +58,8 @@ QueueHandle_t XQuee_ultrasonic;
 
 
 typedef struct {
-    uint32_t distance_m;
-    uint32_t distance_cm;
+    uint32_t distancia_m;
+    uint32_t distancia_cm;
     TaskHandle_t taskHandle;
 } ultrasom_distancia;
 
