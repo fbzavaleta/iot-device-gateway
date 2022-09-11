@@ -44,6 +44,7 @@ static const char * TAG = "MAIN-ROBOT: ";
  * Quees
  */
 QueueHandle_t XQuee_ultrasonic;
+QueueHandle_t XQuee_distance; //adicionado na nac2 a
 
 typedef struct {
 	uint16_t command;
@@ -51,13 +52,20 @@ typedef struct {
 	TaskHandle_t taskHandle;
 } CMD_t;
 
-
+//struct criada na nac2 a
+typedef struct {
+	uint32_t distance_cm;
+	float distance_m;
+}DISTANCE_t;
 
 void ultrasonic()
 {
 	CMD_t cmdBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
+
+	//adicionado na nac2 a
+	distance_t distanceBuf;
 
 	ultrasonic_sensor_t sensor = {
 		.trigger_pin = TRIGG_GPIO,
@@ -88,6 +96,12 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+
+			//adicionado na nac2 a
+			
+			distanceBuf.distance_cm = distance;
+            distanceBuf.distance_m = distance / 100.00;
+            xQueueSend(XQuee_distances, &distanceBuf, portMAX_DELAY);
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
@@ -123,6 +137,13 @@ void app_main(void)
 	if( (XQuee_ultrasonic = xQueueCreate( 10, sizeof(CMD_t)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
+		return;
+	} 
+
+	//adicionado na nac2 a
+	if( (XQuee_distance = xQueueCreate( 10, sizeof(DISTANCE_t)) ) == NULL )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_distance.\n" );
 		return;
 	} 
 
