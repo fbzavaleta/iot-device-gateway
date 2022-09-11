@@ -44,6 +44,7 @@ static const char * TAG = "MAIN-ROBOT: ";
  * Quees
  */
 QueueHandle_t XQuee_ultrasonic;
+QueueHandle_t XQuee_distances;
 
 typedef struct {
 	uint16_t command;
@@ -51,11 +52,16 @@ typedef struct {
 	TaskHandle_t taskHandle;
 } CMD_t;
 
+typedef struct {
+    uint32_t distance_cm;
+    float distance_m;
+} distance_t;
 
 
 void ultrasonic()
 {
 	CMD_t cmdBuf;
+    distance_t distanceBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
 
@@ -88,6 +94,15 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+
+            /*
+            Checkpoint2-A -> we should storage meters and centimeters, 
+            please create a new structure to storage this distance values.
+            */
+            distanceBuf.distance_cm = distance;
+            distanceBuf.distance_m = distance / 100.00;
+            xQueueSend(XQuee_distances, &distanceBuf, portMAX_DELAY);
+
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
@@ -123,6 +138,12 @@ void app_main(void)
 	if( (XQuee_ultrasonic = xQueueCreate( 10, sizeof(CMD_t)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
+		return;
+	}
+
+    if( (XQuee_distances = xQueueCreate( 10, sizeof(distance_t)) ) == NULL )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_distances.\n" );
 		return;
 	} 
 
