@@ -51,10 +51,15 @@ typedef struct {
 	TaskHandle_t taskHandle;
 } CMD_t;
 
-
+typedef struct {
+	uint32_t distance_cm;
+	uint32_t distance_m;	
+	TaskHandle_t taskHandle;
+} distance_ultrasonic;
 
 void ultrasonic()
 {
+	distance_ultrasonic distance_ultrasonic;
 	CMD_t cmdBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
@@ -88,6 +93,8 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+			distance_ultrasonic.distance_cm = distance;
+			distance_ultrasonic.distance_m = distance / 100.0;
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
