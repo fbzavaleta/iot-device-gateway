@@ -44,6 +44,7 @@ static const char * TAG = "MAIN-ROBOT: ";
  * Quees
  */
 QueueHandle_t XQuee_ultrasonic;
+QueueHandle_t XQuee_distances;
 
 typedef struct {
 	uint16_t command;
@@ -52,9 +53,15 @@ typedef struct {
 } CMD_t;
 
 
+typedef struct {
+    float distancia_m;
+    uint32_t distancia_cm;
+	TaskHandle_t taskHandle;
+} DISTANCIA_t;
 
 void ultrasonic()
 {
+	DISTANCIA_t distancebuf;
 	CMD_t cmdBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
@@ -70,7 +77,7 @@ void ultrasonic()
 		uint32_t distance;
 		esp_err_t res = ultrasonic_measure_cm(&sensor, MAX_DISTANCE_CM, &distance);
 		if (res != ESP_OK) {
-			printf("Error: ");
+			printf("error: ");
 			switch (res) {
 				case ESP_ERR_ULTRASONIC_PING:
 					printf("Cannot ping (device is in invalid state)\n");
@@ -88,6 +95,11 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+
+
+			distanceBuf.distance_cm = distance;
+            distanceBuf.distancia_m = distance / 100.00;
+            xQueueSend(XQuee_distances, &distanceBuf, portMAX_DELAY);
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
@@ -124,8 +136,13 @@ void app_main(void)
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
 		return;
-	} 
+	}
 
+    if( (XQuee_distances = xQueueCreate( 10, sizeof(DISTANCIA_t)) ) == NULL )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_distances.\n" );
+		return; 
+	}
     if( ( xTaskCreate( ultrasonic, "ultrasonic", 2048, NULL, 5, NULL )) != pdTRUE )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar ultrasonic.\n" );	
