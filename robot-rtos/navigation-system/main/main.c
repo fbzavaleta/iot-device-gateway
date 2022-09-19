@@ -17,6 +17,8 @@
  */
 #include "driver/gpio.h"
 #include "ultrasonic.h"
+#include "wifi_robot.h"
+#include "nvs_flash.h"
 
 /*
  * logs
@@ -36,6 +38,9 @@
  */
 static const char * TAG = "MAIN-ROBOT: ";
 
+void http_Socket ( void * pvParameter );
+void http_SendReceive ( void * pvParameter );
+
 #define CMD_MEASURE	300
 #define MAX_DISTANCE_CM 500 // 5m max
 #define DEGUG 1
@@ -44,6 +49,7 @@ static const char * TAG = "MAIN-ROBOT: ";
  * Quees
  */
 QueueHandle_t XQuee_ultrasonic;
+QueueHandle_t XQuee_comunications;
 
 typedef struct {
 	uint16_t command;
@@ -51,6 +57,10 @@ typedef struct {
 	TaskHandle_t taskHandle;
 } CMD_t;
 
+typedef struct xData {
+ 	int sock; 
+ 	uint32_t distance;
+} xSocket_t;
 
 
 void ultrasonic()
@@ -117,14 +127,150 @@ void collision()
 	vTaskDelete(NULL);
 }
 
+void http_Socket(void * pvParameter)
+{
+	int rc; 
+	xSocket_t xSocket;
+	uint32_t displacement_x;
+	
+	for (;;)
+	{
+		int sock;
+
+		xQueueReceive( XQuee_comunications, &displacement_x, portMAX_DELAY ); 
+		ESP_LOGI(TAG, "Comunications recibe: %d", displacement_x);
+
+		open_socket(&sock, &rc);
+		ESP_LOGI(TAG, "Status Socket: %d", rc);
+
+		if (rc == -1)
+		{
+			ESP_LOGI(TAG, "error on Socket: %d", rc);
+			for( int i = 1; i <= 5; ++i )
+			{	
+				ESP_LOGI(TAG, "timeout: %d", 5-i);
+				vTaskDelay( 1000/portTICK_PERIOD_MS );
+			}
+			continue;			
+		}
+
+		xSocket.sock = sock;
+		xSocket.distance = 10;
+
+		xTaskCreate( http_SendReceive, "http_SendReceive", 10000, (void*)&(xSocket), 5, NULL );
+	}
+	vTaskDelete(NULL);
+	
+}
+
+void http_SendReceive(void * pvParameter)
+{
+	int rec_offset = 0; 
+	int total =	1*1024; 
+	char *buffer = pvPortMalloc( total );
+	if( buffer == NULL ) 
+	{
+		
+		ESP_LOGI(TAG, "pvPortMalloc Error\r\n");
+		vTaskDelete(NULL); 	  
+		return;
+	 }
+	 
+	/**
+	 * Recebe o Socket da conexão com o servidor web;
+	 */
+    xSocket_t * xSocket = (xSocket_t*) pvParameter;
+	
+	const char * msg_post = \
+
+        "POST /update HTTP/1.1\n"
+        "Host: api.thingspeak.com\n"
+        "Connection: close\n"
+        "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
+        "Content-Type: application/x-www-form-urlencoded\n"
+        "content-length: ";
+		
+	char databody[50];
+  	sprintf( databody, "{XNLVSMMPW8LO2M7I&field1=%d}", xSocket->distance);
+	sprintf( buffer , "%s%d\r\n\r\n%s\r\n\r\n", msg_post, strlen(databody), databody);
+
+  
+	int rc = send( xSocket->sock, buffer, strlen(buffer), 0 );
+
+	ESP_LOGI(TAG, "HTTP Enviado? rc: %d", rc);
+	
+	for(;;)
+	{
+		ssize_t sizeRead = recv(xSocket->sock, buffer+rec_offset, total-rec_offset, 0);
+		
+		if ( sizeRead == -1 ) 
+		{
+			ESP_LOGI( TAG, "recv: %d", sizeRead );
+		}
+
+		if ( sizeRead == 0 ) 
+		{
+			break;
+		}
+
+		if( sizeRead > 0 ) 
+		{	
+			ESP_LOGI(TAG, "Socket: %d - Data read (size: %d) was: %.*s", xSocket->sock, sizeRead, sizeRead, buffer);
+		   
+		   rec_offset += sizeRead;
+		 }
+
+		vTaskDelay( 5/portTICK_PERIOD_MS );
+	}
+	
+	rc = close(xSocket->sock);
+	
+	ESP_LOGI(TAG, "close: rc: %d", rc); 
+	
+	vPortFree( buffer );	
+
+	vTaskDelete(NULL); 	
+}
+
+void setup_sensor()
+{
+	uint32_t displacement_x;
+
+	bool utrasonic_sensor;
+	bool reflex_sensor_left;
+	bool reflex_sensor_rigth;
+
+	for (;;)
+	{
+		displacement_x = 20;
+		xQueueSend(XQuee_comunications, &displacement_x, portMAX_DELAY);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
+	vTaskDelete(NULL);
+}
+
 void app_main(void)
 {
+	esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES) 
+	{
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+	ESP_ERROR_CHECK(ret);
+	wifi_config();
 
 	if( (XQuee_ultrasonic = xQueueCreate( 10, sizeof(CMD_t)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
 		return;
 	} 
+
+	if( (XQuee_comunications = xQueueCreate( 10, sizeof(uint32_t)) ) == NULL )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_comunications.\n" );
+		return;
+	} 	
 
     if( ( xTaskCreate( ultrasonic, "ultrasonic", 2048, NULL, 5, NULL )) != pdTRUE )
 	{
@@ -135,6 +281,18 @@ void app_main(void)
     if( ( xTaskCreate( collision, "collision", 2048, NULL, 5, NULL )) != pdTRUE )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar collision.\n" );	
+		return;		
+	}      
+
+    if( ( xTaskCreate( http_Socket, "http_Socket", 2048, NULL, 5, NULL )) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar http_Socket.\n" );	
+		return;		
+	}       
+
+    if( ( xTaskCreate( setup_sensor, "setup_sensor", 2048, NULL, 5, NULL )) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar setup_sensor.\n" );	
 		return;		
 	}       
 
