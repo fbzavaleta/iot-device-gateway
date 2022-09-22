@@ -23,3 +23,4 @@ Route172.16.54.150 - - [13/Sep/2022 21:52:54] "POST /conection-sensors?field1=34
 
 extern void wifi_config( void );
 extern void  open_socket(int * sock_var, int * status_var);
+extern void http_server_init();
