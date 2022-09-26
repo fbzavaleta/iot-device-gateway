@@ -194,7 +194,7 @@ void http_SendReceive(void * pvParameter)
 	
 	const char * msg_post = \
 
-        "POST /update HTTP/1.1\n"
+        "POST /connection-sensors HTTP/1.1\n"
         "Host: api.thingspeak.com\n"
         "Connection: close\n"
         "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
