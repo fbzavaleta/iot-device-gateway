@@ -43,14 +43,23 @@ for example:
 
 Create a Pull Request and add me to revise and aprove the features/changes.
 
-## Checkpoint2-A (2 ptos) - due 11/09 00:00
+## Checkpoint2-B (3 ptos) - due 27/09 00:00
 
-At this time we have been created two task, at the collision task, we recibe the distance and print it like a decimal on meters only:
+We had developed the code to comunicate with the Thingspeak API, but we are developing a hardware API based on flask, so please updating the code to comunicate with flask, to inicializate the service follow this steps:
 
-![distance-example](docs/task_collision_example.png)
+```bash
+pip3 install -r requirements.txt
+```
 
-we should storage meters and centimeters, please create a new structure to storage this distance values.
+```bash
+export FLASK_APP=gateway #on the project's root
+```
 
+```bash
+flask run --host=xxx.xxx.x.x #on the project's root
+```
+You should see something like that:
 
+![server-example](docs/flask-server.png)
 
-
+Use postman to ensure that the esp32 is doing a HTTP POST on the API .
