@@ -18,7 +18,7 @@ API
 Route172.16.54.150 - - [13/Sep/2022 21:52:54] "POST /conection-sensors?field1=34&shdjdj=gdhshs HTTP/1.1" 200 -r
 */
 #define EXAMPLE_ESP_WIFI_SSID 	"DOGS 2.4" //modificar nac2-B
-#define EXAMPLE_ESP_WIFI_PASS 	"N4W1@K1"   //modificar nac2-B
+#define EXAMPLE_ESP_WIFI_PASS 	"XXXXXX"   //modificar nac2-B
 
 
 extern void wifi_config( void );
