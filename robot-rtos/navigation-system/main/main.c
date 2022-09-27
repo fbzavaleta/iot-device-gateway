@@ -184,9 +184,8 @@ void http_SendReceive(void * pvParameter)
 	const char * msg_post = \
 
         "POST /conection-sensors HTTP/1.1\n"
-        "Host: api.thingspeak.com\n"
+        "Host: 192.168.10.10:5000\n"
         "Connection: close\n"
-        "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
 		
