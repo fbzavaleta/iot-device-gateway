@@ -12,7 +12,7 @@ Debug
 API 
 */
 #define SERVER_IP "192.168.0.49" //modificar nac2-B
-#define SERVER_PORT 80 //modificar nac2-B
+#define SERVER_PORT 5000 //modificar nac2-B
 
 /*
 Route172.16.54.150 - - [13/Sep/2022 21:52:54] "POST /conection-sensors?field1=34&shdjdj=gdhshs HTTP/1.1" 200 -r
