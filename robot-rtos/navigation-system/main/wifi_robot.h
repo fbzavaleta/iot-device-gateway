@@ -11,7 +11,7 @@ Debug
 /*
 API 
 */
-#define SERVER_IP "192.140.20.1" //modificar nac2-B
+#define SERVER_IP "189.108.125.201" //modificar nac2-B
 #define SERVER_PORT 5000 //modificar nac2-B
 
 /*
