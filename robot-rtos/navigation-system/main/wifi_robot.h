@@ -18,7 +18,7 @@ API
 Route172.16.54.150 - - [13/Sep/2022 21:52:54] "POST /conection-sensors?field1=34&shdjdj=gdhshs HTTP/1.1" 200 -r
 */
 #define EXAMPLE_ESP_WIFI_SSID 	"bat_caverna" //modificar nac2-B
-#define EXAMPLE_ESP_WIFI_PASS 	"lasm428593"   //modificar nac2-B
+#define EXAMPLE_ESP_WIFI_PASS 	"xxxxxxx"   //modificar nac2-B
 
 
 extern void wifi_config( void );
