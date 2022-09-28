@@ -184,7 +184,7 @@ void http_SendReceive(void * pvParameter)
 	const char * msg_post = \
 
         "POST /conection-sensors HTTP/1.1\n" //alter update to conection-sensors
-        "Host: 127.0.0.1:5000" //localmachine
+        "Host: 127.0.0.1:5000\n" //localmachine
         "Connection: close\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
