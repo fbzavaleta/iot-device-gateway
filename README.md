@@ -43,23 +43,14 @@ for example:
 
 Create a Pull Request and add me to revise and aprove the features/changes.
 
-## Checkpoint2-B (3 ptos) - due 27/09 00:00
+## Checkpoint2-C (2 ptos) - due 13/10 00:00
 
-We had developed the code to comunicate with the Thingspeak API, but we are developing a hardware API based on flask, so please updating the code to comunicate with flask, to inicializate the service follow this steps:
+At this time we have setup the analogic read from one channel, refer to one sensor, we will need to add the follow features:
 
 ```bash
-pip3 install -r requirements.txt
+add the ADC1_CHANNEL_3 support to the existing function, use structure to get the two analogic read and send/recive on the quee.
 ```
 
 ```bash
-export FLASK_APP=gateway #on the project's root
+Refactor the code of the mpu sensor(checkpoint 1) and add this to the project like a module.
 ```
-
-```bash
-flask run --host=xxx.xxx.x.x #on the project's root
-```
-You should see something like that:
-
-![server-example](docs/flask-server.png)
-
-Use postman to ensure that the esp32 is doing a HTTP POST on the API .
