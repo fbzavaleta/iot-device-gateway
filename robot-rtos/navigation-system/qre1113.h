@@ -8,3 +8,4 @@ typedef struct
     uint32_t voltage_ADC1C3;
 
 } adc_channel_struct;
+

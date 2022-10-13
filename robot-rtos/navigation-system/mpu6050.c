@@ -49,8 +49,8 @@ Registradores
 
 #define SERVER_IP "184.106.153.149"
 #define SERVER_PORT 80
-#define EXAMPLE_ESP_WIFI_SSID 	"Vivo Fibra_Amorim"
-#define EXAMPLE_ESP_WIFI_PASS 	"87234897rd"
+#define EXAMPLE_ESP_WIFI_SSID 	"Wallace"
+#define EXAMPLE_ESP_WIFI_PASS 	"300699"
 
 static const char * TAG = "MAIN: ";
 

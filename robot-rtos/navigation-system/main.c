@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/event_groups.h"
 
 /*
  * Drivers
@@ -53,8 +54,10 @@ void http_SendReceive ( void * pvParameter );
 QueueHandle_t XQuee_ultrasonic;
 QueueHandle_t XQuee_comunications;
 QueueHandle_t XQuee_navigation;
-
 QueueHandle_t xQueue_timepout_x;
+
+static EventGroupHandle_t wifi_event_group;
+
 
 typedef struct {
 	uint16_t command;
@@ -191,12 +194,12 @@ void http_SendReceive(void * pvParameter)
         "POST /update HTTP/1.1\n"
         "Host: api.thingspeak.com\n"
         "Connection: close\n"
-        "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
+        "X-THINGSPEAKAPIKEY: HANR524FT4VXQ47X\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
 		
 	char databody[50];
-  	sprintf( databody, "{XNLVSMMPW8LO2M7I&field1=%d}", xSocket->distance);
+  	sprintf( databody, "{HANR524FT4VXQ47X&field1=%d}", xSocket->distance);
 	sprintf( buffer , "%s%d\r\n\r\n%s\r\n\r\n", msg_post, strlen(databody), databody);
 
   
