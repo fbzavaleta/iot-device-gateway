@@ -20,6 +20,7 @@
 #include "wifi_robot.h"
 #include "nvs_flash.h"
 #include "qre1113.h"
+#include "mpu6050.h"
 
 /*
  * logs
@@ -53,6 +54,7 @@ QueueHandle_t XQuee_ultrasonic;
 QueueHandle_t XQuee_comunications;
 QueueHandle_t XQuee_navigation;
 
+QueueHandle_t xQueue_timepout_x;
 
 typedef struct {
 	uint16_t command;
@@ -258,13 +260,16 @@ checkpoint 2C - adicionar suporte para o chanel3
 
 void read_qre()
 {
-	uint32_t reflex_channel0;
+	
+	adc_rM81195_struct rfx_channels;
 
 	for (;;)
 	{
-		reflex_channel0 = alalogic_read();
-		xQueueSend(XQuee_navigation, &reflex_channel0, portMAX_DELAY);
-		ESP_LOGI(TAG, "Read analogic send to quee mV %d",reflex_channel0);
+		rfx_channels = alalogic_read();
+		xQueueSend(XQuee_navigation, &rfx_channels.voltage_ADC1C0, portMAX_DELAY);
+		xQueueSend(XQuee_navigation, &rfx_channels.voltage_ADC1C3, portMAX_DELAY);
+		ESP_LOGI(TAG, "Read analogic send to quee mV %d",rfx_channels.voltage_ADC1C0);
+		ESP_LOGI(TAG, "Read analogic send to quee mV %d",rfx_channels.voltage_ADC1C3);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -272,12 +277,16 @@ void read_qre()
 
 void drive()
 {
-	uint32_t reflex_channel0;
+
+	adc_rM81195_struct rfx_channels;
+
 
 	for (;;)
 	{
-		xQueueReceive( XQuee_navigation, &reflex_channel0, portMAX_DELAY ); 
-		ESP_LOGI(TAG, "Read analogic  recibe mV %d",reflex_channel0);
+		xQueueReceive( XQuee_navigation, &rfx_channels.voltage_ADC1C0, portMAX_DELAY );
+		xQueueReceive( XQuee_navigation, &rfx_channels.voltage_ADC1C3, portMAX_DELAY ); 
+		ESP_LOGI(TAG, "Read analogic  recibe mV %d",rfx_channels.voltage_ADC1C0);
+		ESP_LOGI(TAG, "Read analogic  recibe mV %d",rfx_channels.voltage_ADC1C3);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -295,8 +304,24 @@ void app_main(void)
 	wifi_config();
 	http_server_init();
 	anlogic_setup();
-	
-	if( (XQuee_navigation = xQueueCreate( 10, sizeof(uint32_t)) ) == NULL )
+	wifi_event_group = xEventGroupCreate();
+	wifi_init_sta();
+	init_mpu6050();
+
+
+	if ( (xQueue_timepout_x = xQueueCreate(25, sizeof(uint32_t))) ==NULL)
+	{
+         ESP_LOGI( TAG, "error - Nao foi possivel alocar a quee.\r\n" );  
+         return;  
+	}
+
+	if( xTaskCreate( rgb_activate_M1, "task_blink", 1024*2, NULL, 2, NULL ) != pdTRUE )
+    {
+         ESP_LOGI( TAG, "error - Nao foi possivel alocar task_blink.\r\n" );  
+         return;   
+    }
+
+	if( (XQuee_navigation = xQueueCreate( 10, sizeof(adc_rM81195_struct)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_navigation.\n" );
 		return;
@@ -348,6 +373,18 @@ void app_main(void)
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar setup_sensor.\n" );	
 		return;		
-	}       
+	}   
+
+	if( xTaskCreate( Task_Socket, "task_print", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar Task_Socket.\n" );
+		return;
+	}
+
+	if( xTaskCreate( task_mpu6050, "task_button", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar task_button.\n" );
+		return;
+	}    
 
 }
