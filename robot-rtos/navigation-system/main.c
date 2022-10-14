@@ -258,13 +258,13 @@ checkpoint 2C - adicionar suporte para o chanel3
 
 void read_qre()
 {
-	uint32_t reflex_channel0;
+	ad_struct reflex_channel;
 
 	for (;;)
 	{
-		reflex_channel0 = alalogic_read();
-		xQueueSend(XQuee_navigation, &reflex_channel0, portMAX_DELAY);
-		ESP_LOGI(TAG, "Read analogic send to quee mV %d",reflex_channel0);
+		reflex_channel = analogic_readx();
+		xQueueSend(XQuee_navigation, &reflex_channel, portMAX_DELAY);
+		ESP_LOGI(TAG, "Read analogic send to quee mV %d and %d", reflex_channel.adc0_chars, reflex_channel.adc3_chars);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -272,12 +272,12 @@ void read_qre()
 
 void drive()
 {
-	uint32_t reflex_channel0;
+	ad_struct reflex_channel;
 
 	for (;;)
 	{
-		xQueueReceive( XQuee_navigation, &reflex_channel0, portMAX_DELAY ); 
-		ESP_LOGI(TAG, "Read analogic  recibe mV %d",reflex_channel0);
+		xQueueReceive( XQuee_navigation, &reflex_channel, portMAX_DELAY ); 
+		ESP_LOGI(TAG, "Read analogic recibe mV %d and %d", reflex_channel.adc0_chars, reflex_channel.adc3_chars);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -294,9 +294,18 @@ void app_main(void)
 	ESP_ERROR_CHECK(ret);
 	wifi_config();
 	http_server_init();
-	anlogic_setup();
-	
-	if( (XQuee_navigation = xQueueCreate( 10, sizeof(uint32_t)) ) == NULL )
+	analogic_setupx();
+	wifi_event_group = xEventGroupCreate();
+	wifi_init_sta();
+	init_mpu6050();
+
+	if ( (xQueue_timeOut_x= xQueueCreate(25, sizeof(uint32_t))) ==NULL)
+	{
+         ESP_LOGI( TAG, "error - Nao foi possivel alocar a quee.\r\n" );  
+         return;  
+	}
+
+	if( (XQuee_navigation = xQueueCreate( 10, sizeof(ad_struct)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_navigation.\n" );
 		return;
@@ -348,6 +357,18 @@ void app_main(void)
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar setup_sensor.\n" );	
 		return;		
+	}
+
+	if( xTaskCreate( Task_Socket, "task_socket", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar Task_Socket.\n" );
+		return;
+	}
+
+	if( xTaskCreate( task_mpu6050, "task_mpu6050", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar task_mpu6050.\n" );
+		return;
 	}       
 
 }
