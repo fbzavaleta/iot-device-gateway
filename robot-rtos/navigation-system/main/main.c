@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/event_groups.h"
 
 /*
  * Drivers
@@ -19,6 +20,7 @@
 #include "ultrasonic.h"
 #include "wifi_robot.h"
 #include "nvs_flash.h"
+#include "mpu6050.h"
 
 /*
  * logs
@@ -50,6 +52,11 @@ void http_SendReceive ( void * pvParameter );
  */
 QueueHandle_t XQuee_ultrasonic;
 QueueHandle_t XQuee_comunications;
+QueueHandle_t XQuee_navigation;
+QueueHandle_t xQueue_timeOut_x;
+
+
+static EventGroupHandle_t wifi_event_group;
 
 typedef struct {
 	uint16_t command;
