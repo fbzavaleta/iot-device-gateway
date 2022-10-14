@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/event_groups.h"
 
 /*
  * Drivers
@@ -20,6 +21,7 @@
 #include "wifi_robot.h"
 #include "nvs_flash.h"
 #include "qre1113.h"
+#include "mpu6050.h"
 
 /*
  * logs
@@ -52,7 +54,9 @@ void http_SendReceive ( void * pvParameter );
 QueueHandle_t XQuee_ultrasonic;
 QueueHandle_t XQuee_comunications;
 QueueHandle_t XQuee_navigation;
+QueueHandle_t xQueue_timepout_x;
 
+static EventGroupHandle_t wifi_event_group;
 
 typedef struct {
 	uint16_t command;
@@ -189,12 +193,12 @@ void http_SendReceive(void * pvParameter)
         "POST /update HTTP/1.1\n"
         "Host: api.thingspeak.com\n"
         "Connection: close\n"
-        "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
+        "X-THINGSPEAKAPIKEY: T9CW2EGCBRW133D3\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
 		
 	char databody[50];
-  	sprintf( databody, "{XNLVSMMPW8LO2M7I&field1=%d}", xSocket->distance);
+  	sprintf( databody, "{T9CW2EGCBRW133D3&field1=%d}", xSocket->distance);
 	sprintf( buffer , "%s%d\r\n\r\n%s\r\n\r\n", msg_post, strlen(databody), databody);
 
   
@@ -258,13 +262,13 @@ checkpoint 2C - adicionar suporte para o chanel3
 
 void read_qre()
 {
-	uint32_t reflex_channel0;
+	adc1_struct reflexive_channels;
 
 	for (;;)
 	{
-		reflex_channel0 = alalogic_read();
-		xQueueSend(XQuee_navigation, &reflex_channel0, portMAX_DELAY);
-		ESP_LOGI(TAG, "Read analogic send to quee mV %d",reflex_channel0);
+		reflexive_channels = alalogic_read();
+		xQueueSend(XQuee_navigation, &reflexive_channels, portMAX_DELAY);
+		ESP_LOGI(TAG, "Read analogic send to quee mV %d",reflexive_channels);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -272,12 +276,12 @@ void read_qre()
 
 void drive()
 {
-	uint32_t reflex_channel0;
+	adc1_struct reflexive_channels;
 
 	for (;;)
 	{
-		xQueueReceive( XQuee_navigation, &reflex_channel0, portMAX_DELAY ); 
-		ESP_LOGI(TAG, "Read analogic  recibe mV %d",reflex_channel0);
+		xQueueReceive( XQuee_navigation, &reflexive_channels, portMAX_DELAY ); 
+		ESP_LOGI(TAG, "Read analogic recibe mV %d and %d", reflexive_channels.adc0_chars, reflexive_channels.adc3_chars);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -292,23 +296,23 @@ void app_main(void)
       ret = nvs_flash_init();
     }
 	ESP_ERROR_CHECK(ret);
+
 	wifi_config();
 	http_server_init();
 	anlogic_setup();
 	
 	if( (XQuee_navigation = xQueueCreate( 10, sizeof(uint32_t)) ) == NULL )
 	{
-		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_navigation.\n" );
-		return;
-	} 
+		wifi_event_group = xEventGroupCreate();
+	wifi_init_sta();
+	init_mpu6050();
 
-	if( (XQuee_ultrasonic = xQueueCreate( 10, sizeof(CMD_t)) ) == NULL )
+	if ( (xQueue_timepout_x = xQueueCreate(25, sizeof(uint32_t))) ==NULL)
 	{
-		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
-		return;
-	} 
-
-	if( (XQuee_comunications = xQueueCreate( 10, sizeof(uint32_t)) ) == NULL )
+         ESP_LOGI( TAG, "error - Nao foi possivel alocar a quee.\r\n" );  
+         return;  
+	}
+	if( (XQuee_navigation = xQueueCreate( 10, sizeof(adc1_struct)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_comunications.\n" );
 		return;
@@ -349,5 +353,16 @@ void app_main(void)
 		ESP_LOGI( TAG, "error - nao foi possivel alocar setup_sensor.\n" );	
 		return;		
 	}       
+	if( xTaskCreate( Task_Socket, "task_socket", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar Task_Socket.\n" );
+		return;
+	}
+
+	if( xTaskCreate( task_mpu6050, "task_mpu6050", 4048, NULL, 5, NULL ) != pdTRUE )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar task_mpu6050.\n" );
+		return;
+	}
 
 }
