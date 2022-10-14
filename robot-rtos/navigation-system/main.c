@@ -299,7 +299,7 @@ void app_main(void)
 	wifi_init_sta();
 	init_mpu6050();
 
-	if ( (xQueue_timepout_x = xQueueCreate(25, sizeof(uint32_t))) ==NULL)
+	if ( (xQueue_timeOut_x= xQueueCreate(25, sizeof(uint32_t))) ==NULL)
 	{
          ESP_LOGI( TAG, "error - Nao foi possivel alocar a quee.\r\n" );  
          return;  
