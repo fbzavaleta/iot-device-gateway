@@ -1,5 +1,6 @@
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#include "qre1113.h"
 
 //A39  GPIO39 ADC1_CHANNEL_3
 //A36  GPIO36 ADC1_CHANNEL_0
@@ -26,7 +27,9 @@ void anlogic_setup()
 }
 
 //checkpoint2C - Adicionar suporte para o outro channel numa struct
-uint32_t alalogic_read()
-{
-    return esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_0), &adc0_chars);
+void alalogic_read()
+{   
+    extern xADCRead_t xADCRead;
+    xADCRead.adc0 = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_0), &adc0_chars);
+    xADCRead.adc3 = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC1_CHANNEL_0), &adc3_chars);
 }
