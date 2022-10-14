@@ -268,7 +268,7 @@ void read_qre()
 	{
 		reflex_channels = alalogic_read();
 		xQueueSend(XQuee_navigation, &reflex_channels, portMAX_DELAY);
-		ESP_LOGI(TAG, "Read analogic send to quee mV %d and %d", reflex_channels.adc0_chars, reflex_channels.adc3_chars);
+		ESP_LOGI(TAG, "Read analogic send to quee mV %d and %d", reflex_channels.my0_chars, reflex_channels.my3_chars);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -282,7 +282,7 @@ void drive()
 	{
 
 		xQueueReceive( XQuee_navigation, &reflex_channels, portMAX_DELAY ); 
-		ESP_LOGI(TAG, "Read analogic recibe mV %d and %d", reflex_channels.adc0_chars, reflex_channels.adc3_chars);
+		ESP_LOGI(TAG, "Read analogic recibe mV %d and %d", reflex_channels.my0_chars, reflex_channels.my3_chars);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
