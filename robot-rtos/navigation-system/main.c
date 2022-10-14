@@ -20,6 +20,7 @@
 #include "wifi_robot.h"
 #include "nvs_flash.h"
 #include "qre1113.h"
+#include "mpu6050.h"
 
 /*
  * logs
@@ -258,13 +259,14 @@ checkpoint 2C - adicionar suporte para o chanel3
 
 void read_qre()
 {
-	uint32_t reflex_channel0;
+	extern xADCRead_t xADCRead;
 
 	for (;;)
 	{
-		reflex_channel0 = alalogic_read();
-		xQueueSend(XQuee_navigation, &reflex_channel0, portMAX_DELAY);
-		ESP_LOGI(TAG, "Read analogic send to quee mV %d",reflex_channel0);
+		alalogic_read();
+
+		xQueueSend(XQuee_navigation, &xADCRead, portMAX_DELAY);
+		ESP_LOGI(TAG, "Read analogic send to quee mV -> adc0: %d mV and adc3: %dmV", xADCRead.adc0, xADCRead.adc3);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	vTaskDelete(NULL);
@@ -272,13 +274,23 @@ void read_qre()
 
 void drive()
 {
-	uint32_t reflex_channel0;
+	struct xADCRead_t xADCRead;
+	uint8_t ascii[30];
 
 	for (;;)
 	{
-		xQueueReceive( XQuee_navigation, &reflex_channel0, portMAX_DELAY ); 
-		ESP_LOGI(TAG, "Read analogic  recibe mV %d",reflex_channel0);
+		xQueueReceive( XQuee_navigation, &xADCRead, portMAX_DELAY ); 
+		strcpy((char*)ascii, "Read analogic recibe mV ");
+		sprintf((char*)ascii, "%d mV",xADCRead.adc0);
+		sprintf((char*)ascii, "%d mV",xADCRead.adc3);
+			
+			if( DEGUG ) 
+			{
+				ESP_LOGI(TAG,"\n\n%s", ascii);
+			}
+			
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		
 	}
 	vTaskDelete(NULL);
 }
