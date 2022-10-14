@@ -262,7 +262,7 @@ checkpoint 2C - adicionar suporte para o chanel3
 
 void read_qre()
 {
-	adc1_struct reflex_channels;
+	channel_struct reflex_channels;
 
 	for (;;)
 	{
@@ -277,7 +277,7 @@ void read_qre()
 
 void drive()
 {
-	adc1_struct reflex_channels;
+	channel_struct reflex_channels;
 
 
 	for (;;)
@@ -314,7 +314,7 @@ void app_main(void)
 		return;
 	} 
 
-	if( (XQuee_comunications = xQueueCreate( 10, sizeof(adc1_struct)) ) == NULL )
+	if( (XQuee_comunications = xQueueCreate( 10, sizeof(channel_struct)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_comunications.\n" );
 		return;
