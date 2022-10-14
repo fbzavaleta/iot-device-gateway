@@ -183,15 +183,15 @@ void http_SendReceive(void * pvParameter)
 	
 	const char * msg_post = \
 
-        "POST /update HTTP/1.1\n"
-        "Host: api.thingspeak.com\n"
+        "POST /conection-sensors HTTP/1.1\n"
+        "Host: 192.168.15.5:5000\n"
         "Connection: close\n"
         "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
 		
 	char databody[50];
-  	sprintf( databody, "{XNLVSMMPW8LO2M7I&field1=%d}", xSocket->distance);
+  	sprintf( databody, "{field1=%d}", xSocket->distance);
 	sprintf( buffer , "%s%d\r\n\r\n%s\r\n\r\n", msg_post, strlen(databody), databody);
 
   
