@@ -1,3 +1,7 @@
+typedef struct {
+ 	uint32_t adc0_chars; 
+ 	uint32_t adc3_chars;
+} channel_struct;
 
 extern void anlogic_setup();
-extern uint32_t alalogic_read();
+extern channel_struct alalogic_read();
