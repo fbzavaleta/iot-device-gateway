@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from gateway.core.enums.http_status import HttpStatus
 from gateway.core.response.types import ChannelFeed
@@ -21,6 +21,7 @@ def index():
 
 @bp.route('/conection-sensors',  methods=['POST'])
 def recibe_data():
+    print(request.form) #criado em NAC2 B
     return  jsonify(api_notes),   HttpStatus.OK.value    
 
 
