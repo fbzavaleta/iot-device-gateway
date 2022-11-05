@@ -66,6 +66,7 @@ typedef struct xData {
 void ultrasonic()
 {
 	CMD_t cmdBuf;
+    distance_t distanceBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
 
@@ -98,6 +99,15 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+
+            /*
+            Checkpoint2-A -> we should storage meters and centimeters, 
+            please create a new structure to storage this distance values.
+            */
+            distanceBuf.distance_cm = distance;
+            distanceBuf.distance_m = distance / 100.00;
+            xQueueSend(XQuee_distances, &distanceBuf, portMAX_DELAY);
+
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
@@ -183,15 +193,14 @@ void http_SendReceive(void * pvParameter)
 	
 	const char * msg_post = \
 
-        "POST /update HTTP/1.1\n"
-        "Host: api.thingspeak.com\n"
+        "POST /conection-sensors HTTP/1.1\n"
+        "Host: 127.0.0.1:5000\n"
         "Connection: close\n"
-        "X-THINGSPEAKAPIKEY: XNLVSMMPW8LO2M7I\n"
         "Content-Type: application/x-www-form-urlencoded\n"
         "content-length: ";
 		
 	char databody[50];
-  	sprintf( databody, "{XNLVSMMPW8LO2M7I&field1=%d}", xSocket->distance);
+  	sprintf( databody, "{distance=%d}", xSocket->distance);
 	sprintf( buffer , "%s%d\r\n\r\n%s\r\n\r\n", msg_post, strlen(databody), databody);
 
   
@@ -263,6 +272,12 @@ void app_main(void)
 	if( (XQuee_ultrasonic = xQueueCreate( 10, sizeof(CMD_t)) ) == NULL )
 	{
 		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_ultrasonic.\n" );
+		return;
+	}
+
+    if( (XQuee_distances = xQueueCreate( 10, sizeof(distance_t)) ) == NULL )
+	{
+		ESP_LOGI( TAG, "error - nao foi possivel alocar XQuee_distances.\n" );
 		return;
 	} 
 
