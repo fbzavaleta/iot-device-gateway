@@ -11,14 +11,14 @@ Debug
 /*
 API 
 */
-#define SERVER_IP "184.106.153.149" //modificar nac2-B
-#define SERVER_PORT 80 //modificar nac2-B
+#define SERVER_IP "192.168.15.27" //modificar nac2-B
+#define SERVER_PORT 5000 //modificar nac2-B
 
 /*
 Route172.16.54.150 - - [13/Sep/2022 21:52:54] "POST /conection-sensors?field1=34&shdjdj=gdhshs HTTP/1.1" 200 -r
 */
-#define EXAMPLE_ESP_WIFI_SSID 	"FRANCIS_2G" //modificar nac2-B
-#define EXAMPLE_ESP_WIFI_PASS 	"5d72$@31"   //modificar nac2-B
+#define EXAMPLE_ESP_WIFI_SSID 	"CaioTXA" //modificar nac2-B
+#define EXAMPLE_ESP_WIFI_PASS 	"ar4uj0"   //modificar nac2-B
 
 
 extern void wifi_config( void );
