@@ -1,4 +1,15 @@
 /*
+
+
+ * 5ECS
+ * Wallace Garcia Silva RM 81195
+ * Checkpoint2-A
+
+
+*/
+
+
+/*
  * Lib C
  */
 #include <stdio.h>
@@ -51,6 +62,14 @@ void http_SendReceive ( void * pvParameter );
 QueueHandle_t XQuee_ultrasonic;
 QueueHandle_t XQuee_comunications;
 
+
+typedef struct {
+    uint32_t distancia_m;
+    uint32_t distancia_cm;
+    TaskHandle_t taskHandle;
+} ultrasom_distancia;
+
+
 typedef struct {
 	uint16_t command;
 	uint32_t distance;
@@ -65,6 +84,10 @@ typedef struct xData {
 
 void ultrasonic()
 {
+
+
+	ultrasom_distancia sensor_distancia;
+
 	CMD_t cmdBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
@@ -98,6 +121,10 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+
+			sensor_distancia.distancia_m = distance / 100.0;
+			sensor_distancia.distancia_cm = distance;
+
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
