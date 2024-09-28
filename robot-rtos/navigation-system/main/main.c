@@ -57,14 +57,23 @@ typedef struct {
 	TaskHandle_t taskHandle;
 } CMD_t;
 
+<<<<<<< HEAD
+typedef struct {
+	uint32_t distance_cm;
+	uint32_t distance_m;	
+	TaskHandle_t taskHandle;
+} distance_ultrasonic;
+=======
 typedef struct xData {
  	int sock; 
  	uint32_t distance;
 } xSocket_t;
 
+>>>>>>> 6d4e3aef76859c47b2e71f508ef5c26f480a8955
 
 void ultrasonic()
 {
+	distance_ultrasonic distance_ultrasonic;
 	CMD_t cmdBuf;
 	cmdBuf.command = CMD_MEASURE;
 	cmdBuf.taskHandle = xTaskGetCurrentTaskHandle();
@@ -98,6 +107,8 @@ void ultrasonic()
 			ESP_LOGI(TAG,"Send Distance: %d cm, %.02f m\n", distance, distance / 100.0);
 			cmdBuf.distance = distance;
 			xQueueSend(XQuee_ultrasonic, &cmdBuf, portMAX_DELAY);
+			distance_ultrasonic.distance_cm = distance;
+			distance_ultrasonic.distance_m = distance / 100.0;
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}    
@@ -183,7 +194,7 @@ void http_SendReceive(void * pvParameter)
 	
 	const char * msg_post = \
 
-        "POST /update HTTP/1.1\n"
+        "POST /connection-sensors HTTP/1.1\n"
         "Host: api.thingspeak.com\n"
         "Connection: close\n"
         "X-THINGSPEAKAPIKEY: 7Q0HCR62GSZSX0ET\n"
